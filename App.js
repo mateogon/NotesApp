@@ -5,12 +5,12 @@ import { StyleSheet, Text, View } from "react-native";
 import { NotesScreen } from "./src/features/notes/screens/notes.screen";
 
 import { theme } from "./src/infrastructure/theme";
-
+import { Navigation } from "./src/infrastructure/navigation/index";
 export default function App() {
   return (
     <>
       <ThemeProvider theme={theme}>
-        <NotesScreen />
+        <Navigation />
       </ThemeProvider>
       <StatusBar style="auto" />
     </>
