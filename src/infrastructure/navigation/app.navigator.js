@@ -26,6 +26,10 @@ const createScreenOptions = ({ route }) => {
     },
     tabBarActiveTintColor: TAB_ICONS_COLORS["Active"],
     tabBarInactiveTintColor: TAB_ICONS_COLORS["Inactive"],
+    tabBarStyle: {
+      backgroundColor: "black",
+      borderTopWidth: 0,
+    },
   };
 };
 
