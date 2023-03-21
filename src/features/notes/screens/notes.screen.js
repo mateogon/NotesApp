@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { Text, View } from "react-native";
 import { Button, Card, Title, Paragraph, FAB } from "react-native-paper";
+import { TouchableOpacity } from "react-native-gesture-handler";
 import styled from "styled-components/native";
 import { useTheme } from "styled-components";
 import { SafeArea } from "../../../components/utility/safe-area.component";
@@ -11,6 +12,8 @@ import { FlatGrid } from "react-native-super-grid";
 import MasonryList from "@react-native-seoul/masonry-list";
 import { NoteCard } from "../components/note-card.component";
 import { NotesContext } from "../../../services/notes/notes.context";
+import { formatDate } from "../../../infrastructure/utility/formatDate";
+import { Ionicons } from "@expo/vector-icons";
 import "react-native-get-random-values";
 import { v4 as uuidv4 } from "uuid";
 
@@ -18,54 +21,6 @@ const Loading = styled.ActivityIndicator`
   flex: 1;
 `;
 
-function formatDate(date) {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today.getTime() - 86400000); // Subtract 24 hours
-  const thisWeek = new Date(today.getTime() - today.getDay() * 86400000); // Subtract days from this week
-  const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const thisYear = new Date(today.getFullYear(), 0, 1);
-
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")}`;
-
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  if (date >= today) {
-    return `Today, ${formattedTime}`;
-  } else if (date >= yesterday) {
-    return `Yesterday, ${formattedTime}`;
-  } else if (date >= thisWeek) {
-    const dayName = days[date.getDay()];
-    return `${dayName} ${date.getDate()} ${
-      date.getMonth() + 1
-    }, ${formattedTime}`;
-  } else if (date >= thisMonth) {
-    return `${date.getDate()} ${months[date.getMonth() + 1]}`;
-  } else if (date >= thisYear) {
-    return `${date.getDate()} ${months[date.getMonth() + 1]}`;
-  } else {
-    return `${date.getDate()} ${
-      months[date.getMonth() + 1]
-    } ${date.getFullYear()}`;
-  }
-}
 const Container = styled.View`
   flex: 1;
 `;
@@ -75,6 +30,26 @@ const SearchContainer = styled.View`
   flex: 0.15;
   width: 100%;
 `;
+const BottomBar = styled.View`
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: ${(props) => props.theme.colors.bg.primary};
+  border-top-width: 1px;
+  border-top-color: ${(props) => props.theme.colors.ui.secondary};
+  padding-vertical: 8px;
+`;
+
+const TopBar = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background-color: ${(props) => props.theme.colors.bg.primary};
+  border-bottom-width: 1px;
+  border-bottom-color: ${(props) => props.theme.colors.ui.secondary};
+  padding-vertical: 8px;
+  padding-horizontal: 16px;
+`;
 
 export const NotesScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -82,12 +57,68 @@ export const NotesScreen = ({ navigation }) => {
     useContext(NotesContext);
   const [gridKey, setGridKey] = useState(0);
 
+  // Add the useState hooks for selectionMode and selectedNotes
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedNotes, setSelectedNotes] = useState([]);
+  const [allNotesSelected, setAllNotesSelected] = useState(false);
+  // Functions to handle selection mode and note selection
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedNotes([]); // Clear selected notes when exiting selection mode
+  };
+
+  const toggleNoteSelection = (noteId) => {
+    if (selectedNotes.includes(noteId)) {
+      setSelectedNotes(selectedNotes.filter((id) => id !== noteId));
+    } else {
+      setSelectedNotes([...selectedNotes, noteId]);
+    }
+  };
+
+  // Function to delete all selected notes
+  const deleteSelectedNotes = () => {
+    selectedNotes.forEach((noteId) => removeNote(noteId));
+    toggleSelectionMode();
+  };
+
+  // Function to select all notes
+  const selectAllNotes = () => {
+    if (allNotesSelected) {
+      setSelectedNotes([]);
+    } else {
+      setSelectedNotes(notes.map((note) => note.id));
+    }
+    setAllNotesSelected(!allNotesSelected);
+  };
+
   useEffect(() => {
     setGridKey((prevKey) => prevKey + 1);
   }, [notes]);
 
   return (
     <SafeArea>
+      {selectionMode && (
+        <TopBar>
+          <TouchableOpacity onPress={toggleSelectionMode}>
+            <Ionicons
+              name="close"
+              size={24}
+              color={theme.colors.text.primary}
+            />
+          </TouchableOpacity>
+          <Text style={{ color: theme.colors.text.primary }}>
+            {selectedNotes.length} selected
+          </Text>
+          <TouchableOpacity onPress={selectAllNotes}>
+            <Ionicons
+              name="checkmark-done"
+              size={24}
+              color={allNotesSelected ? "tomato" : theme.colors.text.primary}
+            />
+          </TouchableOpacity>
+        </TopBar>
+      )}
+
       <FAB
         small
         icon="plus"
@@ -112,7 +143,6 @@ export const NotesScreen = ({ navigation }) => {
         <Search />
       </SearchContainer>
       <Container>
-        <Spacer position="top" size="large"></Spacer>
         {isLoading ? (
           <SafeArea>
             <Loading animating={true} color="tomato" size={100} />
@@ -129,45 +159,79 @@ export const NotesScreen = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <View style={{ padding: 4 }}>
-                <NoteCard
-                  id={item.id}
-                  title={item.title}
-                  paragraph={item.content}
-                  date={formatDate(new Date(item.date))}
-                  onPress={() => {
-                    navigation.navigate("EditNote", { noteId: item.id });
+                <TouchableOpacity
+                  onLongPress={() => {
+                    if (!selectionMode) {
+                      toggleSelectionMode();
+                    }
+                    toggleNoteSelection(item.id);
                   }}
-                  keyword={keyword}
-                  ListEmptyComponent={
-                    <Text style={{ textAlign: "center", marginTop: 20 }}>
-                      No notes available
-                    </Text>
-                  }
-                />
+                  onPress={() => {
+                    if (selectionMode) {
+                      toggleNoteSelection(item.id);
+                    } else {
+                      navigation.navigate("EditNote", { noteId: item.id });
+                    }
+                  }}
+                >
+                  <View>
+                    {selectionMode && (
+                      <View style={styles.noteSelectedIcon}>
+                        <Ionicons
+                          name={
+                            selectedNotes.includes(item.id)
+                              ? "checkmark-circle"
+                              : "ellipse"
+                          }
+                          size={24}
+                          color={
+                            selectedNotes.includes(item.id) ? "orange" : "grey"
+                          }
+                          style={{ marginRight: 8 }}
+                        />
+                      </View>
+                    )}
+                    <NoteCard
+                      id={item.id}
+                      title={item.title}
+                      paragraph={item.content}
+                      date={formatDate(new Date(item.date))}
+                      onPress={() => {
+                        if (!selectionMode) {
+                          navigation.navigate("EditNote", { noteId: item.id });
+                        }
+                      }}
+                      keyword={keyword}
+                      selected={selectedNotes.includes(item.id)}
+                      ListEmptyComponent={
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            marginTop: 20,
+                            color: theme.colors.text.primary,
+                          }}
+                        >
+                          No notes available
+                        </Text>
+                      }
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
             )}
           />
-          /*
-          <FlatGrid
-            key={gridKey}
-            itemDimension={130}
-            spacing={8}
-            data={notes}
-            style={styles.gridView}
-            renderItem={({ item }) => (
-              <NoteCard
-                id={item.id}
-                title={item.title}
-                paragraph={item.content}
-                date={formatDate(new Date(item.date))}
-                onPress={() => {
-                  navigation.navigate("EditNote", { noteId: item.id });
-                }}
-                keyword={keyword}
+        )}
+
+        {selectionMode && (
+          <BottomBar>
+            <TouchableOpacity onPress={deleteSelectedNotes}>
+              <Ionicons
+                name="trash"
+                size={24}
+                color={theme.colors.text.secondary}
               />
-            )}
-          />
-          */
+            </TouchableOpacity>
+          </BottomBar>
         )}
       </Container>
     </SafeArea>
@@ -202,5 +266,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#636e72",
     color: "white",
     padding: 10,
+  },
+  noteSelectedIcon: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    zIndex: 999,
   },
 });

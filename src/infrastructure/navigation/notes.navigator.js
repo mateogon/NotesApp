@@ -14,6 +14,7 @@ const NotesStack = createStackNavigator();
 
 export const NotesNavigator = ({ route, navigation }) => {
   const theme = useTheme();
+
   return (
     <NotesStack.Navigator
       screenOptions={{

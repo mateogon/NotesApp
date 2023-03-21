@@ -11,7 +11,7 @@ const TAB_ICONS = {
 };
 const TAB_ICONS_COLORS = {
   Active: "tomato",
-  Inactive: "gray",
+  Inactive: "#A5A5A5",
 };
 
 const createScreenOptions = ({ route }) => {
