@@ -50,6 +50,40 @@ export const EditNoteScreen = ({ route, navigation }) => {
     isLoading,
   } = useContext(NotesContext);
 
+  const [contentUndoStack, setContentUndoStack] = useState([]);
+  const [contentRedoStack, setContentRedoStack] = useState([]);
+
+  const updateContent = (text) => {
+    setContentUndoStack([...contentUndoStack, content]);
+    setContentRedoStack([]);
+    setContent(text);
+  };
+
+  const undoContent = () => {
+    if (contentUndoStack.length > 0) {
+      setContentRedoStack([...contentRedoStack, content]);
+      setContent(contentUndoStack.pop());
+      setContentUndoStack([...contentUndoStack]);
+    }
+  };
+
+  const redoContent = () => {
+    if (contentRedoStack.length > 0) {
+      setContentUndoStack([...contentUndoStack, content]);
+      setContent(contentRedoStack.pop());
+      setContentRedoStack([...contentRedoStack]);
+    }
+  };
+
+  useEffect(() => {
+    navigation.setParams({
+      undoContent: undoContent,
+      redoContent: redoContent,
+      contentUndoStackLength: contentUndoStack.length,
+      contentRedoStackLength: contentRedoStack.length,
+    });
+  }, [contentUndoStack, contentRedoStack]);
+
   // Fetch note data from local storage or database using the noteId
   const fetchNoteData = async () => {
     console.log("fetching note data ", id);
@@ -127,7 +161,7 @@ export const EditNoteScreen = ({ route, navigation }) => {
             <TextInput
               placeholder="Write something..."
               value={content}
-              onChangeText={(text) => setContent(text)}
+              onChangeText={(text) => updateContent(text)}
               multiline={true}
               style={{
                 fontSize: 16,
