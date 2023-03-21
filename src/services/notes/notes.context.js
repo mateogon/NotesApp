@@ -1,35 +1,70 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const NotesContext = createContext();
 
 export const NotesContextProvider = ({ children }) => {
   const [notes, setNotes] = useState([]);
+  const [keyword, setKeyword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [submittedKeyword, setSubmittedKeyword] = useState("");
+
+  const onSearch = useCallback((searchKeyword) => {
+    setIsLoading(true);
+    setKeyword(searchKeyword);
+    setSubmittedKeyword(searchKeyword);
+  }, []);
+
+  useEffect(() => {
+    getNotes();
+  }, [getNotes, submittedKeyword]);
 
   const getNotes = async () => {
     try {
       const keys = await AsyncStorage.getAllKeys();
       const notes = await AsyncStorage.multiGet(keys);
-      const parsedNotes = notes.map((note) => JSON.parse(note[1]));
+      let parsedNotes = notes.map((note) => JSON.parse(note[1]));
+
+      if (submittedKeyword) {
+        parsedNotes = parsedNotes.filter(
+          (note) =>
+            note.title.toLowerCase().includes(submittedKeyword.toLowerCase()) ||
+            note.content.toLowerCase().includes(submittedKeyword.toLowerCase())
+        );
+      }
+
+      // Sort the notes by date recency
+      parsedNotes.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB - dateA;
+      });
+
       setNotes(parsedNotes);
+      console.log("returning getNotes", parsedNotes);
+      setIsLoading(false);
       return parsedNotes;
     } catch (e) {
       console.log("error retrieving all notes", e);
+      setIsLoading(false);
     }
   };
 
   const getNote = async (id) => {
+    setIsLoading(true);
     try {
       const noteData = await AsyncStorage.getItem(`@note-${id}`);
       console.log("note data retrieved");
+      setIsLoading(false);
       return JSON.parse(noteData);
     } catch (error) {
       console.log("error retrieving note data", error);
+      setIsLoading(false);
       return null;
     }
   };
 
-  const add = async (note) => {
+  const addNote = async (note) => {
     const newNotes = [...notes, note];
     setNotes(newNotes);
     try {
@@ -40,7 +75,7 @@ export const NotesContextProvider = ({ children }) => {
     }
   };
 
-  const remove = async (id) => {
+  const removeNote = async (id) => {
     const newNotes = notes.filter((note) => note.id !== id);
     setNotes(newNotes);
     try {
@@ -49,7 +84,7 @@ export const NotesContextProvider = ({ children }) => {
       console.log("error removing note", e);
     }
   };
-  const update = async (note) => {
+  const updateNote = async (note) => {
     console.log("new note data:", note);
     const noteIndex = notes.findIndex((n) => n.id === note.id);
     if (noteIndex !== -1) {
@@ -63,19 +98,18 @@ export const NotesContextProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    getNotes();
-  }, []);
-
   return (
     <NotesContext.Provider
       value={{
         notes,
         getNotes: getNotes,
         getNote: getNote,
-        addNote: add,
-        removeNote: (id) => remove(id),
-        updateNote: (note) => update(note),
+        addNote: addNote,
+        removeNote: (id) => removeNote(id),
+        updateNote: (note) => updateNote(note),
+        search: onSearch,
+        keyword,
+        isLoading,
       }}
     >
       {children}

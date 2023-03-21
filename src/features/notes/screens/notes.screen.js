@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
+import { StyleSheet } from "react-native";
 import { Text, View } from "react-native";
 import { Button, Card, Title, Paragraph, FAB } from "react-native-paper";
 import styled from "styled-components/native";
@@ -7,10 +8,16 @@ import { SafeArea } from "../../../components/utility/safe-area.component";
 import { Search } from "../components/search.component";
 import { Spacer } from "../../../components/spacer/spacer.component";
 import { FlatGrid } from "react-native-super-grid";
+import MasonryList from "@react-native-seoul/masonry-list";
 import { NoteCard } from "../components/note-card.component";
 import { NotesContext } from "../../../services/notes/notes.context";
 import "react-native-get-random-values";
 import { v4 as uuidv4 } from "uuid";
+
+const Loading = styled.ActivityIndicator`
+  flex: 1;
+`;
+
 function formatDate(date) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -71,17 +78,12 @@ const SearchContainer = styled.View`
 
 export const NotesScreen = ({ navigation }) => {
   const theme = useTheme();
-  const { notes, getNotes, updateNote, addNote, removeNote } =
+  const { notes, updateNote, addNote, removeNote, isLoading, keyword } =
     useContext(NotesContext);
   const [gridKey, setGridKey] = useState(0);
 
   useEffect(() => {
-    getNotes();
-  }, []);
-
-  useEffect(() => {
     setGridKey((prevKey) => prevKey + 1);
-    console.log(notes);
   }, [notes]);
 
   return (
@@ -111,24 +113,94 @@ export const NotesScreen = ({ navigation }) => {
       </SearchContainer>
       <Container>
         <Spacer position="top" size="large"></Spacer>
-        <FlatGrid
-          key={gridKey}
-          itemDimension={130}
-          data={notes}
-          renderItem={({ item }) => (
-            <NoteCard
-              id={item.id}
-              title={item.title}
-              paragraph={item.content}
-              date={formatDate(new Date(item.date))}
-              onPress={() => {
-                navigation.navigate("EditNote", { noteId: item.id });
-                console.log("on press note id: ", item.id);
-              }}
-            />
-          )}
-        />
+        {isLoading ? (
+          <SafeArea>
+            <Loading animating={true} color="tomato" size={100} />
+          </SafeArea>
+        ) : (
+          <MasonryList
+            contentContainerStyle={{
+              paddingHorizontal: 10,
+              alignSelf: "stretch",
+            }}
+            numColumns={2}
+            data={notes}
+            key={gridKey}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <View style={{ padding: 4 }}>
+                <NoteCard
+                  id={item.id}
+                  title={item.title}
+                  paragraph={item.content}
+                  date={formatDate(new Date(item.date))}
+                  onPress={() => {
+                    navigation.navigate("EditNote", { noteId: item.id });
+                  }}
+                  keyword={keyword}
+                  ListEmptyComponent={
+                    <Text style={{ textAlign: "center", marginTop: 20 }}>
+                      No notes available
+                    </Text>
+                  }
+                />
+              </View>
+            )}
+          />
+          /*
+          <FlatGrid
+            key={gridKey}
+            itemDimension={130}
+            spacing={8}
+            data={notes}
+            style={styles.gridView}
+            renderItem={({ item }) => (
+              <NoteCard
+                id={item.id}
+                title={item.title}
+                paragraph={item.content}
+                date={formatDate(new Date(item.date))}
+                onPress={() => {
+                  navigation.navigate("EditNote", { noteId: item.id });
+                }}
+                keyword={keyword}
+              />
+            )}
+          />
+          */
+        )}
       </Container>
     </SafeArea>
   );
 };
+
+const styles = StyleSheet.create({
+  gridView: {
+    flex: 1,
+  },
+  itemContainer: {
+    justifyContent: "flex-end",
+    borderRadius: 5,
+    padding: 10,
+    height: 150,
+  },
+  itemName: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  itemCode: {
+    fontWeight: "600",
+    fontSize: 12,
+    color: "#fff",
+  },
+  sectionHeader: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+    alignItems: "center",
+    backgroundColor: "#636e72",
+    color: "white",
+    padding: 10,
+  },
+});

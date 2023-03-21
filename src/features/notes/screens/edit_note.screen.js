@@ -27,6 +27,9 @@ const NoteContainer = styled.View`
   background-color: ${(props) => props.theme.colors.ui.primary};
   border-radius: ${(props) => props.theme.sizes[1]};
 `;
+const Loading = styled.ActivityIndicator`
+  flex: 1;
+`;
 
 export const EditNoteScreen = ({ route, navigation }) => {
   const isFocused = useIsFocused();
@@ -37,8 +40,15 @@ export const EditNoteScreen = ({ route, navigation }) => {
   const [content, setContent] = useState("");
   const [date, setDate] = useState(new Date(Date.now()));
   const [newNote, setNewNote] = useState(false);
-  const { notes, getNotes, getNote, updateNote, addNote, removeNote } =
-    useContext(NotesContext);
+  const {
+    notes,
+    getNotes,
+    getNote,
+    updateNote,
+    addNote,
+    removeNote,
+    isLoading,
+  } = useContext(NotesContext);
 
   // Fetch note data from local storage or database using the noteId
   const fetchNoteData = async () => {
@@ -94,32 +104,40 @@ export const EditNoteScreen = ({ route, navigation }) => {
   return (
     <Container>
       <Spacer position="top" size="large"></Spacer>
-      <TitleContainer>
-        <TextInput
-          placeholder="Title"
-          multiline={true}
-          value={title}
-          onChangeText={(text) => setTitle(text)}
-          style={{
-            fontSize: 25,
-            color: theme.colors.text.primary,
-          }}
-          placeholderTextColor={theme.colors.text.secondary}
-        />
-      </TitleContainer>
-      <NoteContainer>
-        <TextInput
-          placeholder="Write something..."
-          value={content}
-          onChangeText={(text) => setContent(text)}
-          multiline={true}
-          style={{
-            fontSize: 16,
-            color: theme.colors.text.primary,
-          }}
-          placeholderTextColor={theme.colors.text.secondary}
-        />
-      </NoteContainer>
+      {isLoading ? (
+        <SafeArea>
+          <Loading animating={true} color="tomato" size={100} />
+        </SafeArea>
+      ) : (
+        <>
+          <TitleContainer>
+            <TextInput
+              placeholder="Title"
+              multiline={true}
+              value={title}
+              onChangeText={(text) => setTitle(text)}
+              style={{
+                fontSize: 25,
+                color: theme.colors.text.primary,
+              }}
+              placeholderTextColor={theme.colors.text.secondary}
+            />
+          </TitleContainer>
+          <NoteContainer>
+            <TextInput
+              placeholder="Write something..."
+              value={content}
+              onChangeText={(text) => setContent(text)}
+              multiline={true}
+              style={{
+                fontSize: 16,
+                color: theme.colors.text.primary,
+              }}
+              placeholderTextColor={theme.colors.text.secondary}
+            />
+          </NoteContainer>
+        </>
+      )}
     </Container>
   );
 };

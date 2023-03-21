@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components/native";
 import { Searchbar } from "react-native-paper";
 import { useTheme } from "styled-components";
+import { NotesContext } from "../../../services/notes/notes.context";
+
 const SearchContainer = styled.View`
   padding-vertical: ${(props) => props.theme.space[3]};
   padding-horizontal: ${(props) => props.theme.space[3]};
@@ -12,7 +14,15 @@ const SearchContainer = styled.View`
 `;
 
 export const Search = () => {
+  const { keyword, search } = useContext(NotesContext);
+  const [searchKeyword, setSearchKeyword] = useState(keyword);
+
   const theme = useTheme();
+
+  useEffect(() => {
+    setSearchKeyword(keyword);
+  }, [keyword]);
+
   return (
     <SearchContainer>
       <Searchbar
@@ -30,6 +40,13 @@ export const Search = () => {
         }}
         placeholderTextColor={theme.colors.text.disabled}
         cursorColor={theme.colors.text.primary}
+        value={searchKeyword}
+        onSubmitEditing={() => {
+          search(searchKeyword);
+        }}
+        onChangeText={(text) => {
+          setSearchKeyword(text);
+        }}
       />
     </SearchContainer>
   );
