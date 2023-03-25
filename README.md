@@ -3,10 +3,10 @@
 </div>
 
 <div align="center">
-    <img style="max-width: 30%;" src="https://github.com/mateogon/NotesApp/blob/master/img/notes_screen.png?raw=true" alt="notes screen"/>
-    <img style="max-width: 30%;" src="https://github.com/mateogon/NotesApp/blob/master/img/search_highlight.png?raw=true" alt="search highlight"/>
-    <img style="max-width: 30%;" src="https://github.com/mateogon/NotesApp/blob/master/img/selection_mode.png?raw=true" alt="selection mode"/>
-    <img style="max-width: 30%;" src="https://github.com/mateogon/NotesApp/blob/master/img/note_edit.png?raw=true" alt="edit notes"/>
+    <img style="width: 200px;" src="https://github.com/mateogon/NotesApp/blob/master/img/notes_screen.png?raw=true" alt="notes screen"/>
+    <img style="width: 200px;" src="https://github.com/mateogon/NotesApp/blob/master/img/search_highlight.png?raw=true" alt="search highlight"/>
+    <img style="width: 200px;" src="https://github.com/mateogon/NotesApp/blob/master/img/selection_mode.png?raw=true" alt="selection mode"/>
+    <img style="width: 200px;" src="https://github.com/mateogon/NotesApp/blob/master/img/note_edit.png?raw=true" alt="edit notes"/>
 </div>
 
 ## 🧪 Technologies
