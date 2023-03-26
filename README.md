@@ -31,7 +31,7 @@ To run:
 # Install dependencies
 $ yarn install
 
-# Iniciar o projeto
+# Start project
 $ yarn android
 ```
 
